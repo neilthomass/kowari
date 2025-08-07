@@ -7,6 +7,7 @@ pub mod utils;
 pub mod sqlite_storage;
 pub mod binary_index;
 pub mod collection_manager;
+pub mod local_storage;
 
 use thiserror::Error;
 
@@ -39,4 +40,5 @@ pub use persistence::PersistentStorage;
 pub use utils::{cosine_similarity, euclidean_distance};
 pub use sqlite_storage::SQLiteStorage;
 pub use binary_index::BinaryIndex;
-pub use collection_manager::{CollectionManager, Collection}; 
+pub use collection_manager::{CollectionManager, Collection};
+pub use local_storage::LocalStorage; 
