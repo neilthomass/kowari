@@ -4,6 +4,9 @@ pub mod query;
 pub mod vector;
 pub mod persistence;
 pub mod utils;
+pub mod sqlite_storage;
+pub mod binary_index;
+pub mod collection_manager;
 
 use thiserror::Error;
 
@@ -29,4 +32,7 @@ pub use index::{Index, BruteForceIndex};
 pub use query::QueryEngine;
 pub use vector::Vector;
 pub use persistence::PersistentStorage;
-pub use utils::{cosine_similarity, euclidean_distance}; 
+pub use utils::{cosine_similarity, euclidean_distance};
+pub use sqlite_storage::SQLiteStorage;
+pub use binary_index::BinaryIndex;
+pub use collection_manager::{CollectionManager, Collection}; 
