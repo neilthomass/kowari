@@ -1,9 +1,9 @@
-pub mod storage;
 pub mod index;
-pub mod query;
-pub mod vector;
 pub mod persistence;
+pub mod query;
+pub mod storage;
 pub mod utils;
+pub mod vector;
 
 use thiserror::Error;
 
@@ -24,9 +24,9 @@ pub enum VectorDBError {
 pub type Result<T> = std::result::Result<T, VectorDBError>;
 
 // Re-export main types for convenience
-pub use storage::{Storage, InMemoryStorage};
-pub use index::{Index, BruteForceIndex};
-pub use query::QueryEngine;
-pub use vector::Vector;
+pub use index::{BruteForceIndex, HNSWIndex, Index, LSHIndex};
 pub use persistence::PersistentStorage;
-pub use utils::{cosine_similarity, euclidean_distance}; 
+pub use query::QueryEngine;
+pub use storage::{InMemoryStorage, Storage};
+pub use utils::{cosine_similarity, euclidean_distance};
+pub use vector::Vector;

@@ -13,7 +13,7 @@ impl<'a> QueryEngine<'a> {
     }
 
     pub fn search(&self, query_vector: &Vector, top_k: usize) -> Result<Vec<&Vector>> {
-        let results = self.index.query(&query_vector.data, top_k);
+        let results = self.index.query(&query_vector.data, top_k)?;
         
         let mut vectors = Vec::new();
         for (id, _similarity) in results {
@@ -26,7 +26,7 @@ impl<'a> QueryEngine<'a> {
     }
 
     pub fn search_with_scores(&self, query_vector: &Vector, top_k: usize) -> Result<Vec<(&Vector, f32)>> {
-        let results = self.index.query(&query_vector.data, top_k);
+        let results = self.index.query(&query_vector.data, top_k)?;
         
         let mut vectors_with_scores = Vec::new();
         for (id, similarity) in results {
@@ -39,7 +39,7 @@ impl<'a> QueryEngine<'a> {
     }
 
     pub fn search_by_vector(&self, query_data: &Array1<f32>, top_k: usize) -> Result<Vec<&Vector>> {
-        let results = self.index.query(query_data, top_k);
+        let results = self.index.query(query_data, top_k)?;
         
         let mut vectors = Vec::new();
         for (id, _similarity) in results {
