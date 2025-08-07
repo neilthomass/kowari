@@ -157,14 +157,15 @@ impl SQLiteStorage {
     }
 
     pub fn get_system_info(&self, key: &str) -> Result<Option<String>> {
-        let value: Option<String> = self.conn.query_row(
+        match self.conn.query_row(
             "SELECT value FROM system_info WHERE key = ?",
             params![key],
             |row| row.get(0),
-        ).optional()
-        .map_err(|e| crate::VectorDBError::StorageError(format!("Failed to get system info: {}", e)))?;
-
-        Ok(value)
+        ) {
+            Ok(value) => Ok(Some(value)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(crate::VectorDBError::StorageError(format!("Failed to get system info: {}", e))),
+        }
     }
 
     fn get_collection_id(&self) -> Result<i64> {

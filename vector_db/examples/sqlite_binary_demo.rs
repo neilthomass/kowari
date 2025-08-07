@@ -31,7 +31,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let metadata = serde_json::json!({
             "index": i,
             "label": format!("vector_{}", i),
-            "timestamp": chrono::Utc::now().to_rfc3339()
+            "timestamp": std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                .to_string()
         });
         
         let vector = Vector::with_metadata(data, metadata);

@@ -2,9 +2,18 @@ use crate::{vector::Vector, Result};
 use std::path::Path;
 use uuid::Uuid;
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::sqlite_storage::SQLiteStorage;
 use super::binary_index::BinaryIndex;
+
+fn get_current_timestamp() -> String {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        .to_string()
+}
 
 pub struct CollectionManager {
     base_path: std::path::PathBuf,
@@ -56,7 +65,7 @@ impl CollectionManager {
 
         // Set system info
         self.set_system_info(name, "dimension", &dimension.to_string())?;
-        self.set_system_info(name, "created_at", &chrono::Utc::now().to_rfc3339())?;
+        self.set_system_info(name, "created_at", &get_current_timestamp())?;
 
         Ok(())
     }
@@ -150,7 +159,7 @@ impl CollectionManager {
         // Update system info
         let count = collection.binary_index.count_vectors();
         self.set_system_info(collection_name, "vector_count", &count.to_string())?;
-        self.set_system_info(collection_name, "updated_at", &chrono::Utc::now().to_rfc3339())?;
+        self.set_system_info(collection_name, "updated_at", &get_current_timestamp())?;
 
         Ok(())
     }
@@ -179,7 +188,7 @@ impl CollectionManager {
         // Update system info
         let count = collection.binary_index.count_vectors();
         self.set_system_info(collection_name, "vector_count", &count.to_string())?;
-        self.set_system_info(collection_name, "updated_at", &chrono::Utc::now().to_rfc3339())?;
+        self.set_system_info(collection_name, "updated_at", &get_current_timestamp())?;
 
         Ok(())
     }
