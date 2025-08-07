@@ -1,35 +1,50 @@
-Kowari stores your vector files locally using the file system and a custom .kwi file format. It allows you to perform efficient cosine similarity searches to find the most relevant vectors in your database.
+<div align="center">
 
-Designed as a free, local alternative to cloud-based vector databases, Kowari ensures your data remains private. With Kowari’s open-source foundation, you can trust that your vectors are secure and never leave your own environment.
+# Kowari
 
-![Alt text](kowari.jpeg)
+**Fast, local vector database built in Rust**
 
-## Features
 
-- **Multiple index implementations**
+*Store, search, and manage your vectors locally*
+
+</div>
+
+---
+
+##  Features
+
+- **Multiple Search Algorithms**
   - Brute-force search for exact results
-  - Locality-Sensitive Hashing (LSH) using random hyperplanes
-  - Hierarchical Navigable Small World (HNSW) graph for fast approximate search
-- **Query engine** connecting storage and indexes to perform nearest neighbour
-  lookups
-- **Storage backends**
-  - In-memory storage
-  - JSON-based persistent storage
-- **Vector utilities** for cosine similarity, Euclidean distance and random
-  vector generation
-- **Examples and tests** demonstrating usage in the `examples/` and `tests/`
-  directories
+  - Locality-Sensitive Hashing (LSH) for approximate search
+  - Hierarchical Navigable Small World (HNSW) for ultra-fast similarity search
+
+- ** Flexible Storage Backends**
+  - In-memory storage for lightning-fast access
+  - Custom `.kwi` binary format for efficient disk storage
+  - SQLite integration for metadata and system information
+
+- ** High Performance**
+  - Written in Rust for maximum speed and safety
+  - Optimized vector operations with SIMD support
+  - Memory-efficient data structures
+
+- ** Privacy First**
+  - 100% local - your data never leaves your machine
+  - No cloud dependencies or external services
+  - Complete control over your vector data
+
+---
 
 
 ## Setup
 
 ```bash
-git clone https://github.com/your-username/kowari.git
+git clone https://github.com/neilthomass/kowari.git
 cd kowari
 cargo test
 ```
 
-Ensure you have a recent Rust toolchain installed via [rustup](https://rustup.rs/) to compile and run the code.
+---
 
 ## Example
 
@@ -43,14 +58,17 @@ use vector_db::{
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize storage and index
     let mut storage = InMemoryStorage::new();
     let mut index = HNSWIndex::new(16, 32);
 
+    // Add some vectors
     for data in generate_random_vectors(128, 100) {
         let vector = Vector::new(data);
         storage.insert(vector.clone())?;
     }
 
+    // Build the index
     let indexed: Vec<_> = storage
         .all_vectors()
         .iter()
@@ -58,13 +76,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
     index.build(&indexed)?;
 
+    // Perform similarity search
     let engine = QueryEngine::new(&storage, &index);
     let query = storage.all_vectors()[0];
     let results = engine.search(query, 5)?;
 
-    for v in results {
-        println!("{}", v.id);
+    println!("Top 5 similar vectors:");
+    for (i, v) in results.iter().enumerate() {
+        println!("{}. Vector ID: {}", i + 1, v.id);
     }
+    
     Ok(())
 }
 ```
@@ -80,4 +101,6 @@ cargo test
 
 Contributions are welcome! Feel free to open issues or submit pull requests. Please run `cargo test` to verify changes before sending a PR.
 
-If you find this project useful, consider **starring** the repository to show your support.
+**⭐ Don't forget to star this repository if it helped you! ⭐**
+
+
