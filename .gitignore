@@ -1,4 +1,3 @@
-README.md
 .DS_Store
 vector_db/target/
 vector_db/debug_local_storage.rs
