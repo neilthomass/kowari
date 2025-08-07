@@ -1,7 +1,7 @@
 use vector_db::{
     vector::Vector,
-    storage::InMemoryStorage,
-    index::BruteForceIndex,
+    storage::{InMemoryStorage, Storage},
+    index::{BruteForceIndex, Index},
     query::QueryEngine,
     utils::{generate_random_vectors, cosine_similarity},
 };

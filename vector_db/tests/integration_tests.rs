@@ -1,7 +1,7 @@
 use vector_db::{
     vector::Vector,
-    storage::InMemoryStorage,
-    index::BruteForceIndex,
+    storage::{InMemoryStorage, Storage},
+    index::{BruteForceIndex, Index},
     query::QueryEngine,
     utils::{generate_random_vectors, cosine_similarity, euclidean_distance},
     persistence::PersistentStorage,
@@ -150,12 +150,12 @@ fn test_index_operations() {
     index.build(&indexed_data).unwrap();
     
     let query = Array1::from_vec(vec![0.5, 0.5, 0.5, 0.5]);
-    let results = index.query(&query, 3).unwrap();
+    let results = index.query(&query, 3);
     
     assert_eq!(results.len(), 3);
     
     index.clear();
-    let results_after_clear = index.query(&query, 3).unwrap();
+    let results_after_clear = index.query(&query, 3);
     assert_eq!(results_after_clear.len(), 0);
 }
 

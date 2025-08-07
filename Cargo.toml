@@ -14,8 +14,4 @@ uuid = { version = "1.8", features = ["v4", "serde"] }
 rand = "0.8"
 
 [dev-dependencies]
-criterion = "0.5"
-
-[[bench]]
-name = "benchmarks"
-harness = false 
+criterion = "0.5" 

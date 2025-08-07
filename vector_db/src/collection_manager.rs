@@ -22,7 +22,7 @@ pub struct CollectionManager {
 
 pub struct Collection {
     name: String,
-    sqlite_storage: SQLiteStorage,
+    pub sqlite_storage: SQLiteStorage,
     binary_index: BinaryIndex,
     dimension: usize,
 }
@@ -94,12 +94,13 @@ impl CollectionManager {
 
         let sqlite_storage = SQLiteStorage::new(&db_path, name)?;
         let binary_index = BinaryIndex::new(&index_path, 128)?; // Default dimension, will be updated
+        let dimension = binary_index.get_dimension();
 
         let collection = Collection {
             name: name.to_string(),
             sqlite_storage,
             binary_index,
-            dimension: binary_index.get_dimension(),
+            dimension,
         };
 
         self.collections.insert(name.to_string(), collection);

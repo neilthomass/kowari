@@ -2,7 +2,7 @@ use vector_db::{
     vector::Vector,
     collection_manager::CollectionManager,
     utils::generate_random_vectors,
-    index::BruteForceIndex,
+    index::{BruteForceIndex, Index},
     query::QueryEngine,
 };
 use ndarray::Array1;
@@ -90,17 +90,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
     index.build(&indexed_data)?;
 
-    // Create query engine
-    let query_engine = QueryEngine::new(&manager, &index);
-
-    // Perform search
+    // Perform search directly with the index
     let query_data = generate_random_vectors(dimension, 1)[0].clone();
     let query_vector = Vector::new(query_data);
     
-    let results = query_engine.search_with_scores(&query_vector, 5)?;
+    let results = index.query_with_similarity(&query_vector.data, 5, true);
     println!("  Top 5 similar vectors:");
-    for (i, (vector, score)) in results.iter().enumerate() {
-        println!("    {}. Vector {} - Similarity: {:.4}", i + 1, vector.id, score);
+    for (i, (vector_id, score)) in results.iter().enumerate() {
+        println!("    {}. Vector {} - Similarity: {:.4}", i + 1, vector_id, score);
     }
 
     // Test system info

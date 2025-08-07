@@ -50,7 +50,7 @@ impl Index for BruteForceIndex {
     fn build(&mut self, vectors: &[(&Uuid, &Array1<f32>)]) -> Result<()> {
         self.indexed_vectors.clear();
         for (id, vector) in vectors {
-            self.indexed_vectors.push((**id, vector.clone()));
+            self.indexed_vectors.push((**id, (*vector).clone()));
         }
         Ok(())
     }

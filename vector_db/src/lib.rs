@@ -20,6 +20,10 @@ pub enum VectorDBError {
     PersistenceError(String),
     #[error("Serialization Error: {0}")]
     SerializationError(String),
+    #[error("IO Error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("SQLite Error: {0}")]
+    SqliteError(#[from] rusqlite::Error),
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }

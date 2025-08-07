@@ -124,12 +124,12 @@ impl SQLiteStorage {
             "SELECT id, dimension, data, metadata FROM vectors ORDER BY created_at"
         ).map_err(|e| crate::VectorDBError::StorageError(format!("Failed to prepare query: {}", e)))?;
 
-        let rows = stmt.query([])
+        let mut vectors = Vec::new();
+        let mut rows = stmt.query([])
             .map_err(|e| crate::VectorDBError::StorageError(format!("Failed to execute query: {}", e)))?;
 
-        let mut vectors = Vec::new();
-        for row in rows {
-            let row = row.map_err(|e| crate::VectorDBError::StorageError(format!("Failed to fetch row: {}", e)))?;
+        while let Some(row) = rows.next()
+            .map_err(|e| crate::VectorDBError::StorageError(format!("Failed to fetch row: {}", e)))? {
             let vector = self.row_to_vector(&row)?;
             vectors.push(vector);
         }
