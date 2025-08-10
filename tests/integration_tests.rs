@@ -10,22 +10,17 @@ use vector_db::{
 
 #[test]
 fn test_end_to_end_query() {
-    // Create test vectors
-    let vectors_data = generate_random_vectors(128, 100);
-    let mut vectors = Vec::new();
-
-    for data in vectors_data {
-        vectors.push(Vector::new(data));
-    }
-
     // Setup storage and index
     let mut storage = InMemoryStorage::new();
     let mut index = BruteForceIndex::new();
 
-    // Insert vectors into storage
-    for vector in &vectors {
-        storage.insert(vector.clone()).unwrap();
-    }
+    // Insert two deterministic vectors
+    let target = Vector::new(Array1::from_vec(vec![1.0, 0.0, 0.0]));
+    let target_id = target.id;
+    let other = Vector::new(Array1::from_vec(vec![0.0, 1.0, 0.0]));
+
+    storage.insert(target.clone()).unwrap();
+    storage.insert(other).unwrap();
 
     // Build index
     let indexed_data: Vec<_> = storage
@@ -35,37 +30,38 @@ fn test_end_to_end_query() {
         .collect();
     index.build(&indexed_data).unwrap();
 
-    // Create query engine
+    // Query using the target vector and verify it is the top result
     let query_engine = QueryEngine::new(&storage, &index);
+    let results = query_engine.search_with_scores(&target, 2).unwrap();
 
-    // Test query
-    let query_vector = Vector::new(generate_random_vectors(128, 1)[0].clone());
-    let results = query_engine.search(&query_vector, 5).unwrap();
-
-    assert_eq!(results.len(), 5);
-    assert!(results.len() <= 5);
+    assert_eq!(results.len(), 2);
+    assert_eq!(results[0].0.id, target_id);
+    assert!(results[0].1 > results[1].1);
 }
 
 #[test]
 fn test_cosine_similarity_ordering() {
     // Create a simple test with known vectors
-    let v1 = Array1::from_vec(vec![1.0, 0.0, 0.0]);
-    let v2 = Array1::from_vec(vec![0.0, 1.0, 0.0]);
-    let v3 = Array1::from_vec(vec![0.0, 0.0, 1.0]);
-    let query = Array1::from_vec(vec![1.0, 0.0, 0.0]);
-
-    let vectors = vec![
-        Vector::with_id(uuid::Uuid::new_v4(), v1),
-        Vector::with_id(uuid::Uuid::new_v4(), v2),
-        Vector::with_id(uuid::Uuid::new_v4(), v3),
-    ];
+    let vector1 = Vector::with_id(
+        uuid::Uuid::new_v4(),
+        Array1::from_vec(vec![1.0, 0.0, 0.0]),
+    );
+    let id1 = vector1.id;
+    let vector2 = Vector::with_id(
+        uuid::Uuid::new_v4(),
+        Array1::from_vec(vec![0.0, 1.0, 0.0]),
+    );
+    let vector3 = Vector::with_id(
+        uuid::Uuid::new_v4(),
+        Array1::from_vec(vec![0.0, 0.0, 1.0]),
+    );
 
     let mut storage = InMemoryStorage::new();
     let mut index = BruteForceIndex::new();
 
-    for vector in &vectors {
-        storage.insert(vector.clone()).unwrap();
-    }
+    storage.insert(vector1).unwrap();
+    storage.insert(vector2).unwrap();
+    storage.insert(vector3).unwrap();
 
     let indexed_data: Vec<_> = storage
         .all_vectors()
@@ -75,11 +71,11 @@ fn test_cosine_similarity_ordering() {
     index.build(&indexed_data).unwrap();
 
     let query_engine = QueryEngine::new(&storage, &index);
-    let query_vector = Vector::new(query);
+    let query_vector = Vector::new(Array1::from_vec(vec![1.0, 0.0, 0.0]));
     let results = query_engine.search_with_scores(&query_vector, 3).unwrap();
 
-    // The first result should have the highest cosine similarity with the query
-    assert!(results.len() > 0);
+    // The first result should be the vector most similar to the query
+    assert_eq!(results[0].0.id, id1);
     assert!(results[0].1 >= results[1].1);
     assert!(results[1].1 >= results[2].1);
 }
@@ -136,19 +132,20 @@ fn test_index_operations() {
 
     let vectors_data = generate_random_vectors(32, 5);
     let vectors: Vec<Vector> = vectors_data.into_iter().map(Vector::new).collect();
+    let first_id = vectors[0].id;
+    let query = vectors[0].data.clone();
 
     let indexed_data: Vec<_> = vectors.iter().map(|v| (&v.id, &v.data)).collect();
-
     index.build(&indexed_data).unwrap();
 
-    let query = generate_random_vectors(32, 1)[0].clone();
     let results = index.query(&query, 3).unwrap();
 
     assert_eq!(results.len(), 3);
+    assert_eq!(results[0].0, first_id);
 
     index.clear();
     let results_after_clear = index.query(&query, 3).unwrap();
-    assert_eq!(results_after_clear.len(), 0);
+    assert!(results_after_clear.is_empty());
 }
 
 #[test]
@@ -184,8 +181,8 @@ fn test_query_engine_with_metadata() {
     let vector1 = Vector::with_metadata(Array1::from_vec(vec![1.0, 0.0, 0.0]), metadata1);
     let vector2 = Vector::with_metadata(Array1::from_vec(vec![0.0, 1.0, 0.0]), metadata2);
 
-    storage.insert(vector1.clone()).unwrap();
-    storage.insert(vector2.clone()).unwrap();
+    storage.insert(vector1).unwrap();
+    storage.insert(vector2).unwrap();
 
     let indexed_data: Vec<_> = storage
         .all_vectors()
@@ -209,11 +206,15 @@ fn test_query_engine_with_metadata() {
 #[test]
 fn test_lsh_index_query() {
     let vectors_data = generate_random_vectors(16, 20);
-    let vectors: Vec<Vector> = vectors_data.into_iter().map(Vector::new).collect();
-
     let mut storage = InMemoryStorage::new();
-    for v in &vectors {
-        storage.insert(v.clone()).unwrap();
+    let mut first_vector: Option<Vector> = None;
+
+    for (i, data) in vectors_data.into_iter().enumerate() {
+        let vector = Vector::new(data);
+        if i == 0 {
+            first_vector = Some(vector.clone());
+        }
+        storage.insert(vector).unwrap();
     }
 
     let indexed_data: Vec<_> = storage
@@ -225,25 +226,37 @@ fn test_lsh_index_query() {
     let mut index = LSHIndex::new(8);
     index.build(&indexed_data).unwrap();
 
-    let query = generate_random_vectors(16, 1)[0].clone();
-    let results = index.query(&query, 5).unwrap();
+    let query = first_vector.unwrap();
+    let results = index.query(&query.data, 5).unwrap();
 
-    assert!(results.len() <= 5);
+    assert!(!results.is_empty());
+    assert_eq!(results[0].0, query.id);
 }
 
 #[test]
 fn test_hnsw_index_query() {
     let vectors_data = generate_random_vectors(32, 20);
-    let vectors: Vec<Vector> = vectors_data.into_iter().map(Vector::new).collect();
+    let mut first_vector: Option<Vector> = None;
+    let vectors: Vec<Vector> = vectors_data
+        .into_iter()
+        .enumerate()
+        .map(|(i, data)| {
+            let v = Vector::new(data);
+            if i == 0 {
+                first_vector = Some(v.clone());
+            }
+            v
+        })
+        .collect();
 
     let indexed_data: Vec<_> = vectors.iter().map(|v| (&v.id, &v.data)).collect();
 
     let mut index = HNSWIndex::new(8, 16);
     index.build(&indexed_data).unwrap();
 
-    let query = vectors[0].data.clone();
-    let results = index.query(&query, 1).unwrap();
+    let query = first_vector.unwrap();
+    let results = index.query(&query.data, 1).unwrap();
 
     assert_eq!(results.len(), 1);
-    assert_eq!(results[0].0, vectors[0].id);
+    assert_eq!(results[0].0, query.id);
 }
