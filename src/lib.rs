@@ -6,6 +6,7 @@ pub mod utils;
 pub mod vector;
 
 use thiserror::Error;
+use uuid::Uuid;
 
 #[derive(Error, Debug)]
 pub enum VectorDBError {
@@ -17,6 +18,10 @@ pub enum VectorDBError {
     PersistenceError(String),
     #[error("Serialization Error: {0}")]
     SerializationError(String),
+    #[error("Vector with ID {0} already exists")]
+    DuplicateId(Uuid),
+    #[error("Vector with ID {0} not found")]
+    MissingId(Uuid),
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }

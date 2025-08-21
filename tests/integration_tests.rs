@@ -6,6 +6,7 @@ use vector_db::{
     storage::{InMemoryStorage, Storage},
     utils::{cosine_similarity, euclidean_distance, generate_random_vectors},
     vector::Vector,
+    VectorDBError,
 };
 
 #[test]
@@ -42,19 +43,10 @@ fn test_end_to_end_query() {
 #[test]
 fn test_cosine_similarity_ordering() {
     // Create a simple test with known vectors
-    let vector1 = Vector::with_id(
-        uuid::Uuid::new_v4(),
-        Array1::from_vec(vec![1.0, 0.0, 0.0]),
-    );
+    let vector1 = Vector::with_id(uuid::Uuid::new_v4(), Array1::from_vec(vec![1.0, 0.0, 0.0]));
     let id1 = vector1.id;
-    let vector2 = Vector::with_id(
-        uuid::Uuid::new_v4(),
-        Array1::from_vec(vec![0.0, 1.0, 0.0]),
-    );
-    let vector3 = Vector::with_id(
-        uuid::Uuid::new_v4(),
-        Array1::from_vec(vec![0.0, 0.0, 1.0]),
-    );
+    let vector2 = Vector::with_id(uuid::Uuid::new_v4(), Array1::from_vec(vec![0.0, 1.0, 0.0]));
+    let vector3 = Vector::with_id(uuid::Uuid::new_v4(), Array1::from_vec(vec![0.0, 0.0, 1.0]));
 
     let mut storage = InMemoryStorage::new();
     let mut index = BruteForceIndex::new();
@@ -124,6 +116,25 @@ fn test_storage_operations() {
     storage.delete(&vector_id).unwrap();
     assert_eq!(storage.count(), 0);
     assert!(storage.get(&vector_id).is_none());
+}
+
+#[test]
+fn test_storage_duplicate_insert_error() {
+    let mut storage = InMemoryStorage::new();
+
+    let vector = Vector::new(Array1::from_vec(vec![1.0, 2.0, 3.0]));
+    storage.insert(vector.clone()).unwrap();
+    let err = storage.insert(vector).unwrap_err();
+    assert!(matches!(err, VectorDBError::DuplicateId(_)));
+}
+
+#[test]
+fn test_storage_delete_missing_error() {
+    let mut storage = InMemoryStorage::new();
+
+    let id = uuid::Uuid::new_v4();
+    let err = storage.delete(&id).unwrap_err();
+    assert!(matches!(err, VectorDBError::MissingId(_)));
 }
 
 #[test]
