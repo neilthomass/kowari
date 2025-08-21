@@ -1,6 +1,6 @@
-use crate::{vector::Vector, Result};
-use uuid::Uuid;
+use crate::{vector::Vector, Result, VectorDBError};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 pub trait Storage {
     fn insert(&mut self, vector: Vector) -> Result<()>;
@@ -28,7 +28,10 @@ impl InMemoryStorage {
 
 impl Storage for InMemoryStorage {
     fn insert(&mut self, vector: Vector) -> Result<()> {
-        self.vectors.insert(vector.id, vector);
+        let id = vector.id;
+        if self.vectors.insert(id, vector).is_some() {
+            return Err(VectorDBError::DuplicateId(id));
+        }
         Ok(())
     }
 
@@ -37,7 +40,9 @@ impl Storage for InMemoryStorage {
     }
 
     fn delete(&mut self, id: &Uuid) -> Result<()> {
-        self.vectors.remove(id);
+        if self.vectors.remove(id).is_none() {
+            return Err(VectorDBError::MissingId(*id));
+        }
         Ok(())
     }
 
@@ -54,4 +59,4 @@ impl Default for InMemoryStorage {
     fn default() -> Self {
         Self::new()
     }
-} 
+}
