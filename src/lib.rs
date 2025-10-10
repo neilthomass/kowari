@@ -22,6 +22,8 @@ pub enum VectorDBError {
     DuplicateId(Uuid),
     #[error("Vector with ID {0} not found")]
     MissingId(Uuid),
+    #[error("Dimension mismatch: expected {expected}, got {actual}")]
+    DimensionMismatch { expected: usize, actual: usize },
     #[error("IO Error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("SQLite Error: {0}")]

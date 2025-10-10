@@ -271,3 +271,56 @@ fn test_hnsw_index_query() {
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].0, query.id);
 }
+
+#[test]
+fn test_dimension_validation() {
+    let mut storage = InMemoryStorage::new();
+
+    // First vector sets the dimension (3D)
+    let vector1 = Vector::new(Array1::from_vec(vec![1.0, 2.0, 3.0]));
+    storage.insert(vector1).unwrap();
+
+    assert_eq!(storage.dimension(), Some(3));
+
+    // Same dimension should work
+    let vector2 = Vector::new(Array1::from_vec(vec![4.0, 5.0, 6.0]));
+    storage.insert(vector2).unwrap();
+    assert_eq!(storage.count(), 2);
+
+    // Different dimension should fail
+    let vector3 = Vector::new(Array1::from_vec(vec![7.0, 8.0]));
+    let err = storage.insert(vector3).unwrap_err();
+    assert!(matches!(
+        err,
+        VectorDBError::DimensionMismatch {
+            expected: 3,
+            actual: 2
+        }
+    ));
+
+    // Storage count should not increase on error
+    assert_eq!(storage.count(), 2);
+}
+
+#[test]
+fn test_dimension_empty_storage() {
+    let storage = InMemoryStorage::new();
+    assert_eq!(storage.dimension(), None);
+}
+
+#[test]
+fn test_dimension_after_clear() {
+    let mut storage = InMemoryStorage::new();
+
+    let vector = Vector::new(Array1::from_vec(vec![1.0, 2.0, 3.0]));
+    storage.insert(vector).unwrap();
+    assert_eq!(storage.dimension(), Some(3));
+
+    storage.clear();
+    assert_eq!(storage.dimension(), None);
+
+    // After clear, we can insert vectors with different dimensions
+    let vector2 = Vector::new(Array1::from_vec(vec![1.0, 2.0]));
+    storage.insert(vector2).unwrap();
+    assert_eq!(storage.dimension(), Some(2));
+}
