@@ -1,5 +1,5 @@
 [package]
-name = "vector_db"
+name = "kowari"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,6 +12,7 @@ memmap2 = "0.9"
 ndarray = { version = "0.15", features = ["serde"] }
 uuid = { version = "1.8", features = ["v4", "serde"] }
 rand = "0.8"
+rusqlite = { version = "0.30", features = ["bundled"] }
 
 [dev-dependencies]
-criterion = "0.5" 
+criterion = "0.5"

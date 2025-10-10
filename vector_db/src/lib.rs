@@ -1,43 +1,21 @@
-pub mod storage;
-pub mod index;
-pub mod query;
-pub mod vector;
-pub mod persistence;
-pub mod utils;
 pub mod sqlite_storage;
 pub mod binary_index;
 pub mod collection_manager;
 pub mod local_storage;
 
-use thiserror::Error;
+// Re-export core types from parent crate
+pub use kowari::{
+    vector::{self, Vector},
+    persistence::{self, PersistentStorage},
+    utils::{self, cosine_similarity, euclidean_distance},
+    storage::{self, Storage, InMemoryStorage},
+    index::{self, Index, BruteForceIndex, LSHIndex, HNSWIndex},
+    query::{self, QueryEngine},
+    Result,
+    VectorDBError,
+};
 
-#[derive(Error, Debug)]
-pub enum VectorDBError {
-    #[error("Storage Error: {0}")]
-    StorageError(String),
-    #[error("Index Error: {0}")]
-    IndexError(String),
-    #[error("Persistence Error: {0}")]
-    PersistenceError(String),
-    #[error("Serialization Error: {0}")]
-    SerializationError(String),
-    #[error("IO Error: {0}")]
-    IoError(#[from] std::io::Error),
-    #[error("SQLite Error: {0}")]
-    SqliteError(#[from] rusqlite::Error),
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
-}
-
-pub type Result<T> = std::result::Result<T, VectorDBError>;
-
-// Re-export main types for convenience
-pub use storage::{Storage, InMemoryStorage};
-pub use index::{Index, BruteForceIndex};
-pub use query::QueryEngine;
-pub use vector::Vector;
-pub use persistence::PersistentStorage;
-pub use utils::{cosine_similarity, euclidean_distance};
+// Re-export vector_db specific types
 pub use sqlite_storage::SQLiteStorage;
 pub use binary_index::BinaryIndex;
 pub use collection_manager::{CollectionManager, Collection};
